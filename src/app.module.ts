@@ -4,11 +4,12 @@ import { loggerMidddleware } from './conception/middleware';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
    isGlobal: true
-  }),FlowersModule, UserModule, PrismaModule],
+  }),FlowersModule, UserModule, PrismaModule, AuthModule],
   
 })
 export class AppModule implements NestModule {
