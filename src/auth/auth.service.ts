@@ -2,12 +2,13 @@ import { ConflictException, Injectable, Logger, UnauthorizedException } from '@n
 import { LoginDto, RegisterDto } from './dto';
 import { UserService } from '@user/user.service';
 import { Tokens } from './interfaces';
-import { compareSync } from 'bcrypt';
+
 import { User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@prisma/prisma.service';
 import { v4 } from 'uuid';
 import { add } from 'date-fns';
+import { compareSync } from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -37,10 +38,10 @@ export class AuthService {
            this.logger.error(err)
             return null
         })
-        if(!user){
+        if(!user || !compareSync(dto.password, user.password)){
             throw new UnauthorizedException('Not correct login or password')
         }
-        const accessToken = this.jwtService.sign({
+        const accessToken = 'Bearer ' + this.jwtService.sign({
             id: user.id,
             email: user.email,
             roles: user.roles

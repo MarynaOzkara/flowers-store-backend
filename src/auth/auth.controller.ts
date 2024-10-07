@@ -21,7 +21,7 @@ export class AuthController {
         if(!tokens){
             throw new BadRequestException(`Can not login with user ${JSON.stringify(dto.email)}`)
         }
-        return tokens.accessToken
+        return {accessToken: tokens.accessToken}
     }
 
     @Get('refresh')
