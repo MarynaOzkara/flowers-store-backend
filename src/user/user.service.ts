@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { User } from '@prisma/client';
 import { genSaltSync, hashSync } from 'bcrypt';
@@ -31,9 +31,9 @@ export class UserService {
         })
     }
 
-    delete(id: string){
-        return this.prismaServise.user.delete({where: {id}})
-    }
+  delete(id: string){
+    return this.prismaServise.user.delete({where: {id}, select: {id: true}})
+  }
 
     private hashPassword(password: string){
         return hashSync(password, genSaltSync(10))
