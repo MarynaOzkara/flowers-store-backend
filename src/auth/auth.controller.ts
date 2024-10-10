@@ -1,10 +1,16 @@
-import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpStatus, Post, Res, UnauthorizedException } from '@nestjs/common';
 import { LoginDto, RegisterDto } from './dto';
 import { AuthService } from './auth.service';
+import { Tokens } from './interfaces';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { Cookie, Useragent } from '@common/decorators';
+
+const REFRESH_TOKEN = 'refreshToken'
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService){}
+    constructor(private readonly authService: AuthService, private readonly configService: ConfigService){}
 
     @Post('register')
    async register(@Body() dto: RegisterDto){
@@ -16,14 +22,39 @@ export class AuthController {
    }
 
     @Post('login')
-    async login(@Body() dto: LoginDto){
-        const tokens = await this.authService.login(dto)
+    async login(@Body() dto: LoginDto, @Res() res: Response, @Useragent() agent: string){
+       
+        const tokens = await this.authService.login(dto, agent)
         if(!tokens){
             throw new BadRequestException(`Can not login with user ${JSON.stringify(dto.email)}`)
         }
-        return {accessToken: tokens.accessToken}
+        this.setRefreshTokenToCookies(tokens, res)
+      
     }
 
-    @Get('refresh')
-    refreshTokens(){}
+    @Get('refresh-tokens')
+   async refreshTokens(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response, @Useragent() agent: string){
+        if(!refreshToken){
+            throw new UnauthorizedException()
+        }
+        const tokens  = await this.authService.refreshTokens(refreshToken, agent)
+        if(!tokens){
+            throw new UnauthorizedException()
+        }
+        this.setRefreshTokenToCookies(tokens, res)
+    }
+
+    private setRefreshTokenToCookies(tokens: Tokens, res: Response){
+        if(!tokens){
+            throw new UnauthorizedException('Not correct login or password')
+        }
+        res.cookie(REFRESH_TOKEN, tokens.refreshToken.token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            expires: new Date(tokens.refreshToken.exp),
+            secure: this.configService.get('NODE_ENV', 'developement') === 'production',
+            path: '/'
+        })
+        res.status(HttpStatus.CREATED).json({accessToken: tokens.accessToken})
+    }
 }
