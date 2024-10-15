@@ -33,7 +33,7 @@ model Token {
   exp       DateTime
   userId    String
   userAgent String   @map("user_agent")
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("tokens")
 }
