@@ -1,11 +1,13 @@
-import { ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, UseInterceptors } from '@nestjs/common';
+import { ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserResponse } from './responses';
-import { CurrentUser } from '@common/decorators';
+import { CurrentUser, Roles } from '@common/decorators';
 import { JwtPayload } from '@auth/interfaces';
+import { RolesGuard } from '@auth/guards/role.guard';
+import { Role } from '@prisma/client';
 
 
-@Controller('user')
+@Controller('users')
 export class UserController {
     constructor(private readonly userService: UserService){}
 
@@ -21,5 +23,12 @@ export class UserController {
     async deleteUser(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload){
         return this.userService.delete(id, user)
     }
+
+    @UseGuards(RolesGuard)
+    @Roles(Role.ADMIN)
+    @Get()
+   async getAllUsers(){
+    return this.userService.findAll()
+   }
  
 }

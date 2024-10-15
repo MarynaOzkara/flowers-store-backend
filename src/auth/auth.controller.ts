@@ -58,6 +58,7 @@ export class AuthController {
         }
         this.setRefreshTokenToCookies(tokens, res)
     }
+    
 
     private setRefreshTokenToCookies(tokens: Tokens, res: Response){
         if(!tokens){
